@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Flanerie Panoptic</title>
+    <link rel="stylesheet" href="pano.css" />
+    <link rel="icon" href="img/favicon.png" />
+
+    <script src="libs/feather.min.js"></script>
+    <script src="libs/jquery-3.7.1.min.js"></script>
+    <script src="libs/js.cookie.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+
+  </head>
+
+  <body>
+
+    <div id="controls">
+      <span id="uuid"></span>
+
+      =PANOPTIC=
+      <br /><br />
+
+      ZOOM: <span id="zoom">100%</span><br />
+      <i data-feather="minus-circle" id="zoomMinus"></i>
+      <i data-feather="plus-circle" id="zoomPlus"></i>
+
+      <br /><br />
+
+      X: <span id="x">0</span><br />
+      Y: <span id="y">0</span><br />
+      <button id="reset" class="btn">Reset</button>
+
+    </div>
+    <div id="player">
+      <video id="player" width="320" height="240" autoplay loop muted>
+        <source src="video/0_small.mp4" type="video/mp4" />
+      </video>
+    </div>
+
+    <script src="pano.js"></script>
+  </body>
+</html>

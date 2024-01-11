@@ -1,0 +1,57 @@
+body {
+    background-color: #000;
+    color: #fff;
+    font-family: sans-serif;
+    font-size: 14px;
+    margin: 0;
+    padding: 0;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+#controls {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    border: 2px solid pink;
+    z-index: 100;
+    background-color: rgba(125, 125, 125, 0.5);
+    font-size: 32px;
+    line-height: 55px;
+}
+
+#controls > svg.feather {
+    width: 97px;
+    height: 97px;
+}
+
+#controls > button {
+    border: 5px solid #fff;
+    background-color: transparent;
+    color: #fff;
+    font-size: 32px;
+    padding: 13px;
+    margin-top: 10px;
+}
+
+#uuid {
+    font-size: 16px;
+    color: #ccc;
+    font-style: italic;
+    position: absolute;
+    bottom: 20px;
+}
+
+#player {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1px solid green;
+}
+
