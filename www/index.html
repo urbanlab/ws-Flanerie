@@ -6,12 +6,26 @@
 
     <title>Flanerie Panoptic</title>
     <link rel="stylesheet" href="pano.css" />
-    <link rel="icon" href="img/favicon.png" />
+    <link rel="icon" href="icons/icon-72.png" />
 
     <script src="libs/feather.min.js"></script>
     <script src="libs/jquery-3.7.1.min.js"></script>
     <script src="libs/js.cookie.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json" />
+    <!-- ios support -->
+    <link rel="apple-touch-icon" href="icons/icon-72.png" />
+    <link rel="apple-touch-icon" href="icons/icon-96.png" />
+    <link rel="apple-touch-icon" href="icons/icon-128.png" />
+    <link rel="apple-touch-icon" href="icons/icon-144.png" />
+    <link rel="apple-touch-icon" href="icons/icon-152.png" />
+    <link rel="apple-touch-icon" href="icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="icons/icon-384.png" />
+    <link rel="apple-touch-icon" href="icons/icon-512.png" />
+    <meta name="apple-mobile-web-app-status-bar" content="#000" />
+    <meta name="theme-color" content="#000" />
 
   </head>
 
@@ -29,9 +43,17 @@
 
       <br /><br />
 
+      
       X: <span id="x">0</span><br />
       Y: <span id="y">0</span><br />
       <button id="reset" class="btn">Reset</button>
+      
+      <br /><br />
+
+      <span id="resolution"></span><br />
+      <span id="ratio"></span><br />
+      <span id="fps"></span><br />
+
 
     </div>
     <div id="player">

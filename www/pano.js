@@ -1,24 +1,10 @@
 
 feather.replace();
 
-/* Array of possible browser specific settings for transformation */
-var properties = ['transform', 'WebkitTransform', 'MozTransform', 'msTransform', 'OTransform']
-var prop = properties[0]
+$('#player').css('transform-origin', 'top left')
 
-/* Iterators and stuff */    
-var i,j,t;
-
-// VIDEO ELEMENT
-var video = document.getElementsByTagName('video')[0]
-
-/* Find out which CSS transform the browser supports */
-for(i=0,j=properties.length;i<j;i++){
-    if(typeof video.style[properties[i]] !== 'undefined'){
-        prop = properties[i];
-        break;
-    }
-}
-
+var scale = 1.0
+var offset = {x: 0, y: 0}
 
 // ZOOM 
 function zoom(value) {
@@ -26,18 +12,22 @@ function zoom(value) {
     $('#zoom').text(value+"%")
     Cookies.set('zoom', value)
     
-    video.style[prop]='scale('+value/100.0+')';    
+    scale = value/100.0
+    $('#player').css('transform', 'scale('+scale+') translate('+offset.x+'px, '+offset.y+'px)')
 }
 
 // POSITION
 function position(pos) {
+    pos.x = Math.round(pos.x)
+    pos.y = Math.round(pos.y)
     console.log('position', pos)
     $('#x').text(pos.x+" px")
     $('#y').text(pos.y+" px")
     Cookies.set('position', JSON.stringify(pos))
 
-    video.style.left = pos.x+"px"
-    video.style.top = pos.y+"px"
+    offset.x = pos.x/scale
+    offset.y = pos.y/scale
+    $('#player').css('transform', 'scale('+scale+') translate('+offset.x+'px, '+offset.y+'px)')
 }
 
 
@@ -120,3 +110,24 @@ var pos = Cookies.get('position')
 if (pos) pos = JSON.parse(pos)
 else pos = {x: 0, y: 0}
 position(pos)
+
+// INFO
+//
+
+// RESOLUTION
+$('#resolution').text(window.innerWidth+"x"+window.innerHeight)
+// document.querySelector("meta[name=viewport]").setAttribute('content', 'width=device-width, initial-scale='+(1/window.devicePixelRatio)+', maximum-scale=1.0, user-scalable=0');
+
+// DEVICE RATIO
+$('#ratio').text("ratio: "+window.devicePixelRatio)
+
+
+// PWA
+if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function() {
+      navigator.serviceWorker
+        .register("/serviceWorker.js")
+        .then(res => console.log("service worker registered"))
+        .catch(err => console.log("service worker not registered", err))
+    })
+  }

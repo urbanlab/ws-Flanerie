@@ -1,14 +1,20 @@
 import express from 'express';
-import { Server as HttpServer } from 'http';
+import { Server as HttpsServer } from 'https';
 import { Server as IoServer } from "socket.io";
 import Conf from 'conf';
+import fs from 'fs';
+import path from 'path';
 
 const __dirname = new URL('.', import.meta.url).pathname;
+const options={
+  key:fs.readFileSync(path.join(__dirname,'./cert/key.pem')),
+  cert:fs.readFileSync(path.join(__dirname,'./cert/cert.pem'))
+}
 
 const config = new Conf({projectName: 'panoptic'});
 
 var app = express();
-var server = HttpServer(app);
+var server = HttpsServer(options, app);
 var io = new IoServer(server);
 
 var zoom = config.get('zoom', 100);
@@ -74,8 +80,8 @@ io.on('connection', (socket) => {
   socket.emit('hello');
 });
 
-server.listen(3000, function() {
-  console.log('listening on *:3000');
+server.listen(3001, function() {
+  console.log('listening on *:3001');
 });
 
 app.get('/', function(req, res) {
