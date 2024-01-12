@@ -4,30 +4,31 @@ feather.replace();
 $('#player').css('transform-origin', 'top left')
 
 var scale = 1.0
-var offset = {x: 0, y: 0}
+var offset = {x: 0, y: 0}   // unscaled offset
+
+var devices = {}
 
 // ZOOM 
 function zoom(value) {
-    console.log('zoom', value)
+    // console.log('zoom', value)
     $('#zoom').text(value+"%")
     Cookies.set('zoom', value)
     
     scale = value/100.0
-    $('#player').css('transform', 'scale('+scale+') translate('+offset.x+'px, '+offset.y+'px)')
+    $('#player').css('transform', 'scale('+scale+') translate('+offset.x/scale+'px, '+offset.y/scale+'px)')
 }
 
 // POSITION
 function position(pos) {
     pos.x = Math.round(pos.x)
     pos.y = Math.round(pos.y)
-    console.log('position', pos)
+    // console.log('position', pos)
     $('#x').text(pos.x+" px")
     $('#y').text(pos.y+" px")
     Cookies.set('position', JSON.stringify(pos))
 
-    offset.x = pos.x/scale
-    offset.y = pos.y/scale
-    $('#player').css('transform', 'scale('+scale+') translate('+offset.x+'px, '+offset.y+'px)')
+    offset = pos
+    $('#player').css('transform', 'scale('+scale+') translate('+offset.x/scale+'px, '+offset.y/scale+'px)')
 }
 
 
@@ -37,20 +38,20 @@ const socket = io()
 
 socket.on('hello', () => {
     console.log('================ hello ================')
-    socket.emit('hi', uuid)
+    updateSize()
 });
 
 socket.on('zoom', (data) => {
     zoom(data)
 })
 
-socket.on('position', (data) => {
-    position(data)
-})
-
-socket.on('positions', (data) => {
-    if (data[uuid]) 
-        position(data[uuid])
+socket.on('devices', (data) => {
+    // console.log('devices', data)
+    devices = data
+    if (devices[uuid]) {
+        position(devices[uuid].position)
+    }
+    else updateSize()
 })
 
 $('#zoomPlus').click(() => {    
@@ -73,14 +74,26 @@ var touchStart = null
 
 function touchStartHandler(e) {
     // e.preventDefault()
-    touchStart = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+
+    // handle both mouse and touch events
+    if (e.touches) {
+        if (e.touches.length > 1) return // don't handle multitouch
+        e = e.touches[0]
+    }
+
+    touchStart = {x: e.clientX, y: e.clientY}
 }
 
 function touchMoveHandler(e) {
     // e.preventDefault()
-    var pos = {x: e.touches[0].clientX - touchStart.x, y: e.touches[0].clientY - touchStart.y}
+    if (!touchStart) return
+
+    // handle both mouse and touch events
+    if (e.touches) e = e.touches[0]
+
+    var pos = {x: e.clientX - touchStart.x, y: e.clientY - touchStart.y}
     socket.emit('move', uuid, pos)
-    touchStart = {x: e.touches[0].clientX, y: e.touches[0].clientY}
+    touchStart = {x: e.clientX, y: e.clientY}
 }
 
 function touchEndHandler(e) {
@@ -88,10 +101,9 @@ function touchEndHandler(e) {
     touchStart = null
 }
 
-document.addEventListener('touchstart', touchStartHandler, false)
-document.addEventListener('touchmove', touchMoveHandler, false)
-document.addEventListener('touchend', touchEndHandler, false)
-
+$('#stage').on('touchstart mousedown', touchStartHandler)
+$('#stage').on('touchmove mousemove', touchMoveHandler)
+$('#stage').on('touchend mouseup', touchEndHandler)
 
 
 // LOAD SETTINGS from local Cookies
@@ -111,23 +123,53 @@ if (pos) pos = JSON.parse(pos)
 else pos = {x: 0, y: 0}
 position(pos)
 
-// INFO
+
+// ORIENTATION / RESOLUTION CHANGE
 //
 
-// RESOLUTION
-$('#resolution').text(window.innerWidth+"x"+window.innerHeight)
-// document.querySelector("meta[name=viewport]").setAttribute('content', 'width=device-width, initial-scale='+(1/window.devicePixelRatio)+', maximum-scale=1.0, user-scalable=0');
+function updateSize() {
+    $('#resolution').text(window.innerWidth+"x"+window.innerHeight)
+    $('#ratio').text("ratio: "+window.devicePixelRatio)
+    socket.emit('hi', uuid, {x: window.innerWidth, y: window.innerHeight})
+}
 
-// DEVICE RATIO
-$('#ratio').text("ratio: "+window.devicePixelRatio)
+window.addEventListener("orientationchange", function() { updateSize() })
+window.addEventListener("resize", function() { updateSize() })
+updateSize()
+
+
+// CONTROLS / INFO
+//
+
+// RELOAD
+$('#reload').click(() => {
+    location.reload()
+})
 
 
 // PWA
-if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function() {
-      navigator.serviceWorker
-        .register("/serviceWorker.js")
-        .then(res => console.log("service worker registered"))
-        .catch(err => console.log("service worker not registered", err))
-    })
-  }
+// if ("serviceWorker" in navigator) {
+//     window.addEventListener("load", function() {
+//       navigator.serviceWorker
+//         .register("/serviceWorker.js")
+//         .then(res => console.log("service worker registered"))
+//         .catch(err => console.log("service worker not registered", err))
+//     })
+//   }
+
+$('#fullscreen').click(() => {
+    fullscreen()
+})
+
+
+// WELCOME BUTTON
+//
+
+$('#go').click(() => {
+
+    // fullscreen() 
+    wakeLock()
+    $('#welcome').hide()
+})
+
+

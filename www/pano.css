@@ -11,24 +11,50 @@ body {
     overflow: hidden;
 }
 
+#welcome {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* border: 1px solid red; */
+    background-color: rgba(0, 0, 0, 0.8);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#welcome > button {
+    border: 2px solid #fff;
+    background-color: transparent;
+    color: #fff;
+    font-size: 17px;
+    padding: 10px;
+    margin-top: 5px;
+}
+
 #controls {
     position: absolute;
     top: 0;
     left: 0;
-    width: 150px;
-    height: 100%;
-    padding: 20px;
+    width: 200px;
+    max-height: 95%;
+    padding: 15px;
+    margin: 5px;
     box-sizing: border-box;
-    border: 2px solid pink;
-    z-index: 100;
+    border: 1px solid red;
+    z-index: 90;
     background-color: rgba(125, 125, 125, 0.5);
-    font-size: 17px;
-    line-height: 22px;
+    font-size: 16px;
+    line-height: 20px;
+    overflow: auto;
 }
 
 #controls > svg.feather {
-    width: 50px;
-    height: 50px;
+    width: 30px;
+    height: 30px;
 }
 
 #controls > button {
@@ -41,17 +67,55 @@ body {
 }
 
 #uuid {
-    font-size: 10px;
+    font-size: 14px;
     color: #ccc;
     font-style: italic;
-    position: absolute;
     bottom: 20px;
+}
+
+#stage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 1px solid blue;
+}
+
+#controlstage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1920px;
+    height: 1080px;
+    border: 1px solid lightblue;
 }
 
 #player {
     position: absolute;
     top: 0;
     left: 0;
-    /* border: 1px solid green; */
+    border: 1px solid green;
 }
 
+#zoomMinus, #zoomPlus {
+    position: relative;
+    top: -27px;
+    left: 86px;
+}
+
+#reset {
+    position: relative;
+    top: -43px;
+    left: 90px;
+}
+
+.device {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100px;
+    height: 100px;
+    border: 1px solid #ccc;
+    background-color: rgba(30, 30, 30, 0.5);
+}

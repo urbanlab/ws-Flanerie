@@ -2,9 +2,9 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>Flanerie Panoptic</title>
+    <title>Flanerie Control</title>
     <link rel="stylesheet" href="pano.css" />
     <link rel="icon" href="icons/icon-72.png" />
 
@@ -16,30 +16,12 @@
     <script src="js/fullscreen.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 
-    <!-- PWA -->
-    <link rel="manifest" href="manifest.json" />
-    <!-- ios support -->
-    <link rel="apple-touch-icon" href="icons/icon-72.png" />
-    <link rel="apple-touch-icon" href="icons/icon-96.png" />
-    <link rel="apple-touch-icon" href="icons/icon-128.png" />
-    <link rel="apple-touch-icon" href="icons/icon-144.png" />
-    <link rel="apple-touch-icon" href="icons/icon-152.png" />
-    <link rel="apple-touch-icon" href="icons/icon-192.png" />
-    <link rel="apple-touch-icon" href="icons/icon-384.png" />
-    <link rel="apple-touch-icon" href="icons/icon-512.png" />
-    <meta name="apple-mobile-web-app-status-bar" content="#000" />
-    <meta name="theme-color" content="#000" />
-
   </head>
 
   <body>
 
-    <div id="welcome">
-      <button id="go">GO !</button>
-    </div>
-
     <div id="controls">
-      =PANOPTIC=
+      =CONTROL=
       <br />
 
       <button id="reload" class="btn">Reload</button>
@@ -66,12 +48,13 @@
       <span id="uuid"></span>
 
     </div>
+
     <div id="stage">
       <video id="player" autoplay loop muted>
         <source src="video/0_small.mp4" type="video/mp4" />
       </video>
     </div>
 
-    <script src="pano.js"></script>
+    <script src="control.js"></script>
   </body>
 </html>
