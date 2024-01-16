@@ -15,7 +15,7 @@ class VideoPlayer {
         this.stageoffset = {x: 0, y: 0}
         this.scaleStage(1.0)
         
-        this.video = $('<video class="player draggable" autoplay muted loop></video>').appendTo(this.stage);
+        this.video = $('<video class="player draggable" muted loop></video>').appendTo(this.stage);
         this.video.attr('uuid', uuid)
         this.videoscale = 1.0
         this.videooffset = {x: 0, y: 0}
@@ -58,8 +58,13 @@ class VideoPlayer {
         this.video.css('transform', 'scale('+this.videoscale+') translate('+this.videooffset.x/this.videoscale+'px, '+this.videooffset.y/this.videoscale+'px)')
     }
 
-    play(media) {
+    load(media) {
         this.video.attr('src', 'video/'+media)
+        this.video[0].load()
+    }
+
+    play(media) {
+        this.video[0].play()
     }
 
     

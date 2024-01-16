@@ -10,15 +10,12 @@ $('#uuid').text(uuid)
 // PLAYER
 var player = new VideoPlayer( uuid, 'body' )
 
-var touchStart = null
-
-
 // SocketIO
 //
 const socket = io()
 
 socket.on('hello', () => {
-    console.log('================ hello ================')
+    console.log('========= connected ===========')
     updateSize()
 });
 
@@ -32,8 +29,12 @@ socket.on('devices', (data) => {
     else player.position(data[uuid].position)
 })
 
-socket.on('play', (data) => {
-    player.play(data)
+socket.on('load', (media) => {
+    player.load(media)
+})
+
+socket.on('play', () => {
+    player.play()
 })
 
 

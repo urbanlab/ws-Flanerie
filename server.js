@@ -30,9 +30,10 @@ function bootstrapDevice(uuid, reso) {
   if (uuid === undefined) return;
   devices[uuid] = devices[uuid] || {
     position: {x: 0, y: 0}, 
-    resolution: reso || {x: 100, y: 100},
+    resolution: {x: 100, y: 100},
     alive: false
   };
+  if (reso) devices[uuid].resolution = reso;
   devices[uuid].alive = true;
 }
 
@@ -48,6 +49,14 @@ function updateZoom() {
   io.emit('zoom', zoom);
 }
 
+// Laod and play
+function play(media) {
+  io.emit('load', media);
+  setTimeout(() => {
+    io.emit('play');
+  }, 500);
+}
+
 io.on('connection', (socket) => {
   console.log('a user connected');
 
@@ -61,7 +70,6 @@ io.on('connection', (socket) => {
     bootstrapDevice(uuid, reso);
     updateDevices();
     socket.emit('zoom', zoom);
-    socket.emit('play', '0_small.mp4')
   })
   
   socket.on('zoomPlus', () => {
@@ -92,13 +100,10 @@ io.on('connection', (socket) => {
 
   socket.on('moveAll', (delta) => 
   {
-    console.log('moveAll', devices);
-
     for (let uuid in devices) {
       devices[uuid].position.x += delta.x;
       devices[uuid].position.y += delta.y;
     }
-
     updateDevices();
   })
 
@@ -118,6 +123,10 @@ io.on('connection', (socket) => {
       else delete devices[uuid];
     }
     updateDevices();
+  })
+
+  socket.on('play', (media) => {
+    play(media);
   })
 
   // Send initial HELLO trigger
