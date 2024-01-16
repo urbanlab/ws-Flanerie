@@ -21,11 +21,19 @@ var io = new IoServer(server);
 var zoom = config.get('zoom', 1.0);
 
 var devices = config.get('devices', {});
+for (let uuid in devices) {
+  devices[uuid].alive = false;
+}
 
 // Create a new device entry if it doesn't exist
 function bootstrapDevice(uuid, reso) {
-  if (!uuid) return;
-  devices[uuid] = devices[uuid] || {position: {x: 0, y: 0}, resolution: reso || {x: 100, y: 100}};
+  if (uuid === undefined) return;
+  devices[uuid] = devices[uuid] || {
+    position: {x: 0, y: 0}, 
+    resolution: reso || {x: 100, y: 100},
+    alive: false
+  };
+  devices[uuid].alive = true;
 }
 
 // Save devices to config and emit to clients
@@ -38,7 +46,6 @@ function updateDevices() {
 function updateZoom() {
   config.set('zoom', zoom);
   io.emit('zoom', zoom);
-  console.log('zoom', zoom);
 }
 
 io.on('connection', (socket) => {
@@ -68,13 +75,19 @@ io.on('connection', (socket) => {
     updateZoom()
   })
 
+  socket.on('zoom', (z) => {
+    zoom = z;
+    zoom = Math.max(0.1, zoom);
+    updateZoom()
+  })
+
   socket.on('move', (uuid, delta) => 
   {
-    // console.log('move', uuid, delta);
     bootstrapDevice(uuid);
     devices[uuid].position.x += delta.x;
     devices[uuid].position.y += delta.y;
     updateDevices();
+    // console.log('move', uuid, delta, devices[uuid].position); 
   })
 
   socket.on('moveAll', (delta) => 
@@ -95,6 +108,15 @@ io.on('connection', (socket) => {
 
     bootstrapDevice(uuid);
     devices[uuid].position = pos;
+    updateDevices();
+  })
+
+  socket.on('clearDevices', () => 
+  {
+    for (let uuid in devices) {
+      if (devices[uuid].alive) devices[uuid].alive = false;
+      else delete devices[uuid];
+    }
     updateDevices();
   })
 

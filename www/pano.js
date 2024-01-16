@@ -9,10 +9,8 @@ $('#uuid').text(uuid)
 
 // PLAYER
 var player = new VideoPlayer( uuid, 'body' )
-var devices = {}
 
 var touchStart = null
-
 
 
 // SocketIO
@@ -30,11 +28,8 @@ socket.on('zoom', (data) => {
 
 socket.on('devices', (data) => {
     // console.log('devices', data)
-    devices = data
-    if (devices[uuid]) {
-        player.position(devices[uuid].position)
-    }
-    else updateSize()
+    if (!data[uuid] || !data[uuid].alive) updateSize()
+    else player.position(data[uuid].position)
 })
 
 socket.on('play', (data) => {
@@ -58,14 +53,15 @@ $('#reset').click(() => {
 })
 
 
-// TOUCH SELECT
+// DRAG TO OFFSET VIDEO
 //
-dragable( player.stage, (pos) => {
-    
+player.video.on('drag', (e, delta) => {
+    socket.emit('move', uuid, delta)
 })
 
-player.stage.on('touchstart mousedown', ()=>{ drag(uuid) })
-
+player.backstage.on('drag', (e, delta) => {
+    socket.emit('move', uuid, delta)
+})
 
 // ORIENTATION / RESOLUTION CHANGE
 //
@@ -75,10 +71,7 @@ function updateSize() {
     $('#ratio').text("ratio: "+window.devicePixelRatio)
     socket.emit('hi', uuid, {x: window.innerWidth, y: window.innerHeight})
 }
-
-window.addEventListener("orientationchange", function() { updateSize() })
-window.addEventListener("resize", function() { updateSize() })
-updateSize()
+$(window).on('orientationchange resize ready', updateSize)
 
 // SCROLL TO SCALE #player
 //
@@ -86,7 +79,7 @@ updateSize()
 window.addEventListener("wheel", event => {
     const sign = Math.sign(event.deltaY);
     let s = Math.max(0.1, player.videoscale - sign * 0.1);
-    player.zoom(s)
+    socket.emit('zoom', s)
     // console.log(stagescale)
 });
 

@@ -3,10 +3,26 @@
 var dragUUID = -1;
 var touchStart = null
 
-function drag(uuid) { dragUUID = uuid }
+function draggable(element) {
+    element = $(element)
+    element.addClass('draggable')
+    element.off('touchstart mousedown')
+    element.on('touchstart mousedown', (e)=>{
+        if (dragUUID != -1) return
+        dragUUID = $(e.target).attr('uuid')
+        element.addClass('dragging')
+        element.triggerHandler('dragstart')
+    })
+}
 
 // on document ready
 $(function() {
+
+    // Apply to .draggable
+    $('.draggable').each((i, e) => {
+        draggable(e)
+    })
+
     $('body').on('touchstart mousedown', (e)=>{
         // handle both mouse and touch events
         if (e.touches) {
@@ -21,18 +37,25 @@ $(function() {
         // handle both mouse and touch events
         if (e.touches) e = e.touches[0]
     
-        var pos = {x: e.clientX - touchStart.x, y: e.clientY - touchStart.y}
-        
-        
-        if (dragUUID != -1) socket.emit('move', dragUUID, pos)
+        var delta = {x: e.clientX - touchStart.x, y: e.clientY - touchStart.y}
+
+        // trigger drag event on element with uuid attribute
+        $('.dragging').each((i, e) => {
+            $(e).triggerHandler('drag', delta)
+        })
 
         touchStart = {x: e.clientX, y: e.clientY}
     })
     $('body').on('touchend mouseup', (e)=>{
+        $('.dragging').each((i, e) => {
+            $(e).triggerHandler('dragend')
+        })
         touchStart = null
         dragUUID = -1
+        $('.dragging').removeClass('dragging')
     })
 })
+
 
 
 
