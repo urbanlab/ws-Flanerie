@@ -10,11 +10,13 @@
 
     <script src="libs/feather.min.js"></script>
     <script src="libs/jquery-3.7.1.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="libs/js.cookie.min.js"></script>
     <script src="libs/nosleep.min.js"></script>
     <script src="js/wakelock.js"></script>
     <script src="js/fullscreen.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
+    <script src="js/player.js"></script>
+    <script src="js/draguuid.js"></script>
 
     <!-- PWA -->
     <link rel="manifest" href="manifest.json" />
@@ -33,11 +35,11 @@
   </head>
 
   <body>
-
+    
     <div id="welcome">
       <button id="go">GO !</button>
     </div>
-
+    
     <div id="controls">
       =PANOPTIC=
       <br />
@@ -65,11 +67,6 @@
       <br />
       <span id="uuid"></span>
 
-    </div>
-    <div id="stage">
-      <video id="player" autoplay loop muted>
-        <source src="video/0_small.mp4" type="video/mp4" />
-      </video>
     </div>
 
     <script src="pano.js"></script>

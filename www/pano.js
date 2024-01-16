@@ -1,35 +1,18 @@
 
 feather.replace();
 
-$('#player').css('transform-origin', 'top left')
 
-var scale = 1.0
-var offset = {x: 0, y: 0}   // unscaled offset
+// UUID
+const uuid = Cookies.get('uuid') || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+Cookies.set('uuid', uuid)
+$('#uuid').text(uuid)
 
+// PLAYER
+var player = new VideoPlayer( uuid, 'body' )
 var devices = {}
 
-// ZOOM 
-function zoom(value) {
-    // console.log('zoom', value)
-    $('#zoom').text(value+"%")
-    Cookies.set('zoom', value)
-    
-    scale = value/100.0
-    $('#player').css('transform', 'scale('+scale+') translate('+offset.x/scale+'px, '+offset.y/scale+'px)')
-}
+var touchStart = null
 
-// POSITION
-function position(pos) {
-    pos.x = Math.round(pos.x)
-    pos.y = Math.round(pos.y)
-    // console.log('position', pos)
-    $('#x').text(pos.x+" px")
-    $('#y').text(pos.y+" px")
-    Cookies.set('position', JSON.stringify(pos))
-
-    offset = pos
-    $('#player').css('transform', 'scale('+scale+') translate('+offset.x/scale+'px, '+offset.y/scale+'px)')
-}
 
 
 // SocketIO
@@ -42,17 +25,25 @@ socket.on('hello', () => {
 });
 
 socket.on('zoom', (data) => {
-    zoom(data)
+    player.zoom(data)
 })
 
 socket.on('devices', (data) => {
     // console.log('devices', data)
     devices = data
     if (devices[uuid]) {
-        position(devices[uuid].position)
+        player.position(devices[uuid].position)
     }
     else updateSize()
 })
+
+socket.on('play', (data) => {
+    player.play(data)
+})
+
+
+// CONTROLS
+//
 
 $('#zoomPlus').click(() => {    
     socket.emit('zoomPlus')
@@ -67,61 +58,13 @@ $('#reset').click(() => {
 })
 
 
-// TOUCH DRAG
+// TOUCH SELECT
 //
+dragable( player.stage, (pos) => {
+    
+})
 
-var touchStart = null
-
-function touchStartHandler(e) {
-    // e.preventDefault()
-
-    // handle both mouse and touch events
-    if (e.touches) {
-        if (e.touches.length > 1) return // don't handle multitouch
-        e = e.touches[0]
-    }
-
-    touchStart = {x: e.clientX, y: e.clientY}
-}
-
-function touchMoveHandler(e) {
-    // e.preventDefault()
-    if (!touchStart) return
-
-    // handle both mouse and touch events
-    if (e.touches) e = e.touches[0]
-
-    var pos = {x: e.clientX - touchStart.x, y: e.clientY - touchStart.y}
-    socket.emit('move', uuid, pos)
-    touchStart = {x: e.clientX, y: e.clientY}
-}
-
-function touchEndHandler(e) {
-    // e.preventDefault()
-    touchStart = null
-}
-
-$('#stage').on('touchstart mousedown', touchStartHandler)
-$('#stage').on('touchmove mousemove', touchMoveHandler)
-$('#stage').on('touchend mouseup', touchEndHandler)
-
-
-// LOAD SETTINGS from local Cookies
-//
-
-// UUID
-const uuid = Cookies.get('uuid') || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-Cookies.set('uuid', uuid)
-$('#uuid').text(uuid)
-
-// ZOOM
-zoom(Cookies.get('zoom') || 100)
-
-// POSITION
-var pos = Cookies.get('position')
-if (pos) pos = JSON.parse(pos)
-else pos = {x: 0, y: 0}
-position(pos)
+player.stage.on('touchstart mousedown', ()=>{ drag(uuid) })
 
 
 // ORIENTATION / RESOLUTION CHANGE
@@ -136,6 +79,16 @@ function updateSize() {
 window.addEventListener("orientationchange", function() { updateSize() })
 window.addEventListener("resize", function() { updateSize() })
 updateSize()
+
+// SCROLL TO SCALE #player
+//
+
+window.addEventListener("wheel", event => {
+    const sign = Math.sign(event.deltaY);
+    let s = Math.max(0.1, player.videoscale - sign * 0.1);
+    player.zoom(s)
+    // console.log(stagescale)
+});
 
 
 // CONTROLS / INFO

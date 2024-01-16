@@ -18,7 +18,7 @@ var app = express();
 var server = HttpServer(app);
 var io = new IoServer(server);
 
-var zoom = config.get('zoom', 100);
+var zoom = config.get('zoom', 1.0);
 
 var devices = config.get('devices', {});
 
@@ -54,15 +54,17 @@ io.on('connection', (socket) => {
     bootstrapDevice(uuid, reso);
     updateDevices();
     socket.emit('zoom', zoom);
+    socket.emit('play', '0_small.mp4')
   })
   
   socket.on('zoomPlus', () => {
-    zoom += 10;
+    zoom += 0.1;
     updateZoom()
   })
 
   socket.on('zoomMinus', () => {
-    zoom -= 10;
+    zoom -= 0.1;
+    zoom = Math.max(0.1, zoom);
     updateZoom()
   })
 
