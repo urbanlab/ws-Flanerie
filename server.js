@@ -3,6 +3,7 @@ import { SyncServer } from '@ircam/sync'
 import { Server as HttpServer } from 'http';
 import { Server as IoServer } from "socket.io";
 import Conf from 'conf';
+import fs from 'fs';
 
 
 const __dirname = new URL('.', import.meta.url).pathname;
@@ -18,12 +19,22 @@ var app = express();
 var server = HttpServer(app);
 var io = new IoServer(server);
 
+// STATE
+//
 var state = {
   zoom: config.get('zoom', 1.0),
   offsetTime: 0,
-  media: config.get('media', '')
+  media: config.get('media', ''),
+  paused: false,
+  ctrls: false
 }
 
+// PLAYLIST from list of files in /video
+//
+const playlist = fs.readdirSync('./www/video').filter((f) => f.endsWith('.mp4'));
+
+// SYNC Server
+//
 const startTime = process.hrtime();
 const getTimeFunction = () => {
   const now = process.hrtime(startTime);
@@ -32,6 +43,8 @@ const getTimeFunction = () => {
 
 const syncServer = new SyncServer(getTimeFunction);
 
+// Devices
+//
 var devices = config.get('devices', {});
 for (let uuid in devices) {
   devices[uuid].alive = false;
@@ -55,21 +68,6 @@ function updateDevices() {
   io.emit('devices', devices);
 }
 
-// Laod and play
-function play(media) {
-  state.offsetTime = getTimeFunction();
-  state.media = media;
-  config.set('media', media);
-  io.emit('state', state);
-}
-
-// Stop
-function stop() {
-  state.media = '';
-  config.set('media', media);
-  io.emit('state', state);
-}
-
 
 // Socket.io Server
 //
@@ -88,6 +86,7 @@ io.on('connection', (socket) =>
     bootstrapDevice(uuid, reso);
     updateDevices();
     socket.emit('state', state)
+    socket.emit('playlist', playlist)
   })
   
   // Global zoom
@@ -138,14 +137,34 @@ io.on('connection', (socket) =>
     updateDevices();
   })
 
+  // Toggle controls
+  socket.on('toggleCtrls', () => 
+  {
+    state.ctrls = !state.ctrls;
+    io.emit('ctrls', state.ctrls);
+  })
+
   // Load and play media
   socket.on('play', (media) => {
-    play(media);
+    state.offsetTime = getTimeFunction();
+    state.media = media;
+    state.paused = false;
+    config.set('media', state.media);
+    io.emit('state', state);
   })
 
   // Stop media
   socket.on('stop', () => {
-    stop();
+    state.media = '';
+    state.paused = false;
+    config.set('media', state.media);
+    io.emit('stop');
+  })
+
+  // Pause
+  socket.on('pause', () => {
+    state.paused = !state.paused;
+    io.emit( state.paused ? 'pause' : 'play' );
   })
 
   // SYNC Server - client init

@@ -46,9 +46,15 @@ socket.on('zoom', (data) => {
 })
 
 socket.on('devices', (data) => {
-    // console.log('devices', data)
     devices.update(data)
-    // if (data[uuid]) player.position(data[uuid].position)
+})
+
+socket.on('playlist', (data) => {
+    // Create button for each video
+    $('#playlist').empty()
+    data.forEach((v) => {
+        $('#playlist').append(`<button class="btn" onclick="socket.emit('play', '${v}')">${v}</button><br />`)
+    })
 })
 
 $('#zoomPlus').click(() => {    
@@ -59,8 +65,8 @@ $('#zoomMinus').click(() => {
     socket.emit('zoom', Math.max(0.1, player.videoscale - 0.1))
 })
 
-$('#reset').click(() => {
-    player.position({x: 0, y: 0})
+$("#ctrls").click((e) => {
+    socket.emit('toggleCtrls')
 })
 
 $('#clear').click(() => {
@@ -73,6 +79,14 @@ $('#0small').click(() => {
 
 $('#bbb').click(() => {
     socket.emit('play', 'bbb.mp4')
+})
+
+$('#pause').click(() => {
+    socket.emit('pause')
+})
+
+$('#stop').click(() => {
+    socket.emit('stop')
 })
 
 // DRAG VIDEO -> MOVE ALL DEVICES

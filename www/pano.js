@@ -29,6 +29,18 @@ socket.on('devices', (data) => {
     else player.position(data[uuid].position)
 })
 
+socket.on('ctrls', (data) => {
+    console.log('ctrls', data)
+    if (data) $('#controls').show()
+    else $('#controls').hide()
+})
+
+socket.on('state', (data) => {
+    console.log('state', data)
+    if (data.ctrls) $('#controls').show()
+    else $('#controls').hide()
+})
+
 
 // CONTROLS
 //
@@ -84,7 +96,6 @@ window.addEventListener("wheel", event => {
 $('#reload').click(() => {
     location.reload()
 })
-
 
 // PWA
 // if ("serviceWorker" in navigator) {

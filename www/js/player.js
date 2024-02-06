@@ -59,24 +59,31 @@ class VideoPlayer {
     }
 
     load(media) {
+        if (media == this.media) return
+        console.log('load', media)
         this.media = media
         this.video.attr('src', 'video/'+media)
         this.video[0].load()
+        this.video[0].pause()
     }
 
     play(media) {
         if (media) this.load(media)
+        console.log('play!')
         this.video[0].play()
+        this.video[0].style.visibility = 'visible'
     }
 
     pause() {
-        console.log('pause')
+        console.log('pause!')
         this.video[0].pause()
     }
 
     stop() {
         console.log('stop')
+        this.video[0].style.visibility = 'hidden'
         this.video[0].pause()
+        this.media = ''
         this.video[0].currentTime = 0
     }
 

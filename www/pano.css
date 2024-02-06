@@ -71,7 +71,7 @@ body {
     height: 30px;
 }
 
-#controls > button {
+.btn {
     border: 2px solid #fff;
     background-color: transparent;
     color: #fff;
@@ -94,14 +94,14 @@ body {
     width: 10px;
     height: 10px;
     /* border: 1px solid blue; */
-    background-color: blue;
+    /* background-color: blue; */
 }
 
 .player {
     position: absolute;
     top: 0;
     left: 0;
-    border: 1px solid green;
+    /* border: 1px solid green; */
     transform-origin: top left;
 }
 

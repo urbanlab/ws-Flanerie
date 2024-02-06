@@ -54,26 +54,41 @@ class SyncPlayer extends VideoPlayer {
       console.log('state', data)
       this.zoom(data.zoom)
       this.offsetTime = data.offsetTime
-      if (data.media != this.media) this.play(data.media)
+
+      if (data.media != this.media || data.paused != this.element.paused) {
+        if (data.media == '') this.stop()
+        else if(!data.paused) this.play(data.media)
+        else this.load(data.media)
+      }
+
     })
 
     // media element
     this.element = this.video[0];
     this.update();
-
-    // controls
-    socket.on('load', (media) => {
-        this.load(media)
-    })
     
     socket.on('play', (media) => {
       this.play(media)
+    })
+
+    socket.on('pause', () => {
+      this.pause()
+    })
+
+    socket.on('stop', () => {
+      this.stop()
     })
   }
 
     
   update()  {
     if (this._updateTimer) { window.clearTimeout(this._updateTimer); this._updateTimer = null; }
+
+    // Not playing
+    if (!this.media || this.element.paused) {
+      this._updateTimer = window.setTimeout(() => { this.update(); }, this._refreshInterval);
+      return
+    }
 
     const targetTime = this.getSyncTime() % this.element.duration;
     const currentTime = this.element.currentTime;
