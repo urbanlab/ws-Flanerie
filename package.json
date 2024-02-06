@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@ircam/sync": "^2.1.0",
     "conf": "^12.0.0",
     "express": "^4.18.2",
     "socket.io": "^4.7.2",

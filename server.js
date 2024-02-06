@@ -1,9 +1,9 @@
 import express from 'express';
+import { SyncServer } from '@ircam/sync'
 import { Server as HttpServer } from 'http';
 import { Server as IoServer } from "socket.io";
 import Conf from 'conf';
-import fs from 'fs';
-import path from 'path';
+
 
 const __dirname = new URL('.', import.meta.url).pathname;
 // const options={
@@ -18,7 +18,19 @@ var app = express();
 var server = HttpServer(app);
 var io = new IoServer(server);
 
-var zoom = config.get('zoom', 1.0);
+var state = {
+  zoom: config.get('zoom', 1.0),
+  offsetTime: 0,
+  media: config.get('media', '')
+}
+
+const startTime = process.hrtime();
+const getTimeFunction = () => {
+  const now = process.hrtime(startTime);
+  return now[0] + now[1] * 1e-9;
+}
+
+const syncServer = new SyncServer(getTimeFunction);
 
 var devices = config.get('devices', {});
 for (let uuid in devices) {
@@ -43,21 +55,27 @@ function updateDevices() {
   io.emit('devices', devices);
 }
 
-// Save Zoom to config and emit to clients
-function updateZoom() {
-  config.set('zoom', zoom);
-  io.emit('zoom', zoom);
-}
-
 // Laod and play
 function play(media) {
-  io.emit('load', media);
-  setTimeout(() => {
-    io.emit('play');
-  }, 500);
+  state.offsetTime = getTimeFunction();
+  state.media = media;
+  config.set('media', media);
+  io.emit('state', state);
 }
 
-io.on('connection', (socket) => {
+// Stop
+function stop() {
+  state.media = '';
+  config.set('media', media);
+  io.emit('state', state);
+}
+
+
+// Socket.io Server
+//
+
+io.on('connection', (socket) => 
+{
   console.log('a user connected');
 
   socket.on('disconnect', () => {
@@ -69,26 +87,18 @@ io.on('connection', (socket) => {
   {
     bootstrapDevice(uuid, reso);
     updateDevices();
-    socket.emit('zoom', zoom);
+    socket.emit('state', state)
   })
   
-  socket.on('zoomPlus', () => {
-    zoom += 0.1;
-    updateZoom()
-  })
-
-  socket.on('zoomMinus', () => {
-    zoom -= 0.1;
-    zoom = Math.max(0.1, zoom);
-    updateZoom()
-  })
-
+  // Global zoom
   socket.on('zoom', (z) => {
-    zoom = z;
-    zoom = Math.max(0.1, zoom);
-    updateZoom()
+    state.zoom = z;
+    state.zoom = Math.max(0.1, state.zoom);
+    config.set('zoom', state.zoom);
+    io.emit('state', state);
   })
 
+  // Move device
   socket.on('move', (uuid, delta) => 
   {
     bootstrapDevice(uuid);
@@ -98,6 +108,7 @@ io.on('connection', (socket) => {
     // console.log('move', uuid, delta, devices[uuid].position); 
   })
 
+  // Move all devices
   socket.on('moveAll', (delta) => 
   {
     for (let uuid in devices) {
@@ -107,6 +118,7 @@ io.on('connection', (socket) => {
     updateDevices();
   })
 
+  // Set device position
   socket.on('setPosition', (uuid, pos) => 
   {
     console.log('setPosition', uuid, pos);
@@ -116,6 +128,7 @@ io.on('connection', (socket) => {
     updateDevices();
   })
 
+  // Clear devices
   socket.on('clearDevices', () => 
   {
     for (let uuid in devices) {
@@ -125,13 +138,30 @@ io.on('connection', (socket) => {
     updateDevices();
   })
 
+  // Load and play media
   socket.on('play', (media) => {
     play(media);
   })
 
+  // Stop media
+  socket.on('stop', () => {
+    stop();
+  })
+
+  // SYNC Server - client init
+  syncServer.start( 
+    (...args) => { socket.emit('pong', ...args) },  // send  
+    (callback) => { socket.on('ping', (...args) => { callback(...args) }) },  // receive
+  );
+  
   // Send initial HELLO trigger
   socket.emit('hello');
+
 });
+
+
+// Express Server
+//
 
 server.listen(3000, function() {
   console.log('listening on *:3000');

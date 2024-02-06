@@ -7,20 +7,20 @@ const uuid = Cookies.get('uuid') || Math.random().toString(36).substring(2, 15) 
 Cookies.set('uuid', uuid)
 $('#uuid').text(uuid)
 
-// PLAYER
-var player = new VideoPlayer( uuid, 'body' )
-
 // SocketIO
 //
 const socket = io()
+
+// PLAYER
+var player = new SyncPlayer( socket, uuid, 'body' )
 
 socket.on('hello', () => {
     console.log('========= connected ===========')
     updateSize()
 });
 
-socket.on('zoom', (data) => {
-    player.zoom(data)
+socket.on('state', (data) => {
+    player.zoom(data.zoom)
 })
 
 socket.on('devices', (data) => {
@@ -29,24 +29,16 @@ socket.on('devices', (data) => {
     else player.position(data[uuid].position)
 })
 
-socket.on('load', (media) => {
-    player.load(media)
-})
-
-socket.on('play', () => {
-    player.play()
-})
-
 
 // CONTROLS
 //
 
 $('#zoomPlus').click(() => {    
-    socket.emit('zoomPlus')
+    socket.emit('zoom', player.videoscale + 0.1)
 })
 
 $('#zoomMinus').click(() => {
-    socket.emit('zoomMinus')
+    socket.emit('zoom', Math.max(0.1, player.videoscale - 0.1))
 })
 
 $('#reset').click(() => {

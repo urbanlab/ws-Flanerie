@@ -18,7 +18,13 @@ feather.replace();
 //UUID
 const uuid = 0;
 
-var player = new VideoPlayer( uuid, 'body' )
+// SocketIO
+//
+const socket = io()
+
+// Players
+//
+var player = new SyncPlayer( socket, uuid, 'body' )
 var devices = new DevicePool( player )
 
 var touchStart = null
@@ -28,9 +34,7 @@ player.scaleStage(0.5)
 player.moveStage({x: 220, y: 100})
 
 
-// SocketIO
-//
-const socket = io()
+
 
 socket.on('hello', () => {
     console.log('================ hello ================')
@@ -47,20 +51,12 @@ socket.on('devices', (data) => {
     // if (data[uuid]) player.position(data[uuid].position)
 })
 
-socket.on('load', (media) => {
-    player.load(media)
-})
-
-socket.on('play', () => {
-    player.play()
-})
-
 $('#zoomPlus').click(() => {    
-    socket.emit('zoomPlus')
+    socket.emit('zoom', player.videoscale + 0.1)
 })
 
 $('#zoomMinus').click(() => {
-    socket.emit('zoomMinus')
+    socket.emit('zoom', Math.max(0.1, player.videoscale - 0.1))
 })
 
 $('#reset').click(() => {
@@ -73,6 +69,10 @@ $('#clear').click(() => {
 
 $('#0small').click(() => {
     socket.emit('play', '0_small.mp4')
+})
+
+$('#bbb').click(() => {
+    socket.emit('play', 'bbb.mp4')
 })
 
 // DRAG VIDEO -> MOVE ALL DEVICES

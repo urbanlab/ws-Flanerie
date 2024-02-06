@@ -59,14 +59,30 @@ class VideoPlayer {
     }
 
     load(media) {
+        this.media = media
         this.video.attr('src', 'video/'+media)
         this.video[0].load()
     }
 
     play(media) {
+        if (media) this.load(media)
         this.video[0].play()
     }
 
+    pause() {
+        console.log('pause')
+        this.video[0].pause()
+    }
+
+    stop() {
+        console.log('stop')
+        this.video[0].pause()
+        this.video[0].currentTime = 0
+    }
+
+    duration() {
+        return this.video[0].duration
+    }
     
 
 }
