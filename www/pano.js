@@ -81,12 +81,18 @@ $(window).on('orientationchange resize ready', updateSize)
 // SCROLL TO SCALE #player
 //
 
-window.addEventListener("wheel", event => {
-    const sign = Math.sign(event.deltaY);
-    let s = Math.max(0.1, player.videoscale - sign * 0.1);
-    socket.emit('zoom', s)
-    // console.log(stagescale)
-});
+// window.addEventListener("wheel", event => {
+//     const sign = Math.sign(event.deltaY);
+//     let s = Math.max(0.1, player.videoscale - sign * 0.1);
+//     socket.emit('zoom', s)
+//     // console.log(stagescale)
+// });
+
+// DOUBLE CLICK MENU
+//
+$(window).on('dblclick', () => {
+    $('#controls').toggle()
+})
 
 
 // CONTROLS / INFO

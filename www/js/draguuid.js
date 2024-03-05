@@ -2,6 +2,7 @@
 //
 var dragUUID = -1;
 var touchStart = null
+var lastStart = 0
 
 function draggable(element) {
     element = $(element)
@@ -24,6 +25,7 @@ $(function() {
     })
 
     $('body').on('touchstart mousedown', (e)=>{
+        console.log('touchstart')
         // handle both mouse and touch events
         if (e.touches) {
             if (e.touches.length > 1) return // don't handle multitouch
@@ -47,12 +49,14 @@ $(function() {
         touchStart = {x: e.clientX, y: e.clientY}
     })
     $('body').on('touchend mouseup', (e)=>{
+        if (!touchStart) return
         $('.dragging').each((i, e) => {
             $(e).triggerHandler('dragend')
         })
         touchStart = null
         dragUUID = -1
         $('.dragging').removeClass('dragging')
+        console.log('touchend')
     })
 })
 
