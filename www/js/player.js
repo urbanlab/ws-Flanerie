@@ -15,7 +15,7 @@ class VideoPlayer {
         this.stageoffset = {x: 0, y: 0}
         this.scaleStage(1.0)
         
-        this.video = $('<video class="player draggable" muted loop></video>').appendTo(this.stage);
+        this.video = $('<video class="player draggable" muted loop playsinline></video>').appendTo(this.stage);
         this.video.attr('uuid', uuid)
         this.videoscale = 1.0
         this.videooffset = {x: 0, y: 0}
@@ -70,6 +70,7 @@ class VideoPlayer {
     play(media) {
         if (media) this.load(media)
         console.log('play!')
+        $('#logs').text('play! '+ media)
         this.video[0].play()
         this.video[0].style.visibility = 'visible'
     }

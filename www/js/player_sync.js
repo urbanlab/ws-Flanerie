@@ -102,11 +102,13 @@ class SyncPlayer extends VideoPlayer {
       this.element.currentTime = targetTime;
       this.element.playbackRate = 1.01; // this.remote.playbackRate;
       // console.log('seeking', Math.round(diff*100)/100);
+      $('#logs').text('seeking ' + Math.round(diff*100)/100 + " rate: " + rate);
       this._updateTimer = window.setTimeout(() => { this.update(); }, this._refreshInterval/10);
       return
     } 
     else if (rate && this.element.playbackRate !== rate)  {
       // console.log('adapting rate: ', rate);
+      $('#logs').text('adapting rate: ' + rate);
       this.element.playbackRate = rate;
     }
     

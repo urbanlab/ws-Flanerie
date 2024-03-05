@@ -49,6 +49,21 @@ body {
     z-index: 0;
 }
 
+#logs {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10%;
+    padding: 5px;
+    z-index: 200;
+    overflow: auto;
+    border: 1px solid green;
+    background-color: #CCC;
+    color: black;
+    display: none;
+}
+
 #controls {
     position: absolute;
     top: 0;
