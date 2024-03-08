@@ -56,6 +56,10 @@ socket.on('state', (data) => {
     else $('#controls').hide()
 })
 
+socket.on('reload', () => {
+    location.reload()
+})
+
 
 // CONTROLS
 //

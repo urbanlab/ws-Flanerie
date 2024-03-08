@@ -73,6 +73,10 @@ $('#clear').click(() => {
     socket.emit('clearDevices')
 })
 
+$('#alive').click(() => {
+    $('.device').not('.alive').toggle()
+})
+
 $('#0small').click(() => {
     socket.emit('play', '0_small.mp4')
 })
@@ -116,10 +120,7 @@ window.addEventListener("wheel", event => {
 //
 
 // RELOAD
-$('#reload').click(() => {
-    location.reload()
+$('#reloadAll').click(() => {
+    socket.emit('reloadAll')
 })
 
-$('#fullscreen').click(() => {
-    fullscreen()
-})

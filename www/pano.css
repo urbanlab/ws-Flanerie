@@ -146,3 +146,8 @@ body {
     border: 1px solid #fff;
     background-color: rgba(100, 30, 30, 0.5);
 }
+
+.device.alive {
+    border: 1px solid #0f0;
+    background-color: rgba(30, 100, 30, 0.5);
+}

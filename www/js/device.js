@@ -9,6 +9,7 @@ class Device {
         this.position = {x: 0, y: 0}
         this.resolution = {x: 100, y: 100}
         this.selected = false
+        this.alive = false
         this.dom =  $('<div class="device" id="'+uuid+'"></div>')
         this.dom.attr('uuid', uuid)
         draggable(this.dom)
@@ -27,6 +28,10 @@ class Device {
     update(data) {
         this.position = data.position
         this.resolution = data.resolution
+        this.alive = data.alive
+
+        if (this.alive) this.dom.addClass('alive')
+        else this.dom.removeClass('alive')
 
         this.dom.css('left', -1*data.position.x)
         this.dom.css('top', -1*data.position.y)

@@ -31,7 +31,13 @@ var state = {
 
 // PLAYLIST from list of files in /video
 //
-const playlist = fs.readdirSync('./www/video').filter((f) => f.endsWith('.mp4'));
+var playlist = fs.readdirSync('./www/video').filter((f) => f.endsWith('.mp4'));
+
+// watch for changes in /video
+fs.watch('./www/video', (eventType, filename) => {
+  playlist = fs.readdirSync('./www/video').filter((f) => f.endsWith('.mp4'));
+  io.emit('playlist', playlist);
+})
 
 // SYNC Server
 //
@@ -165,6 +171,11 @@ io.on('connection', (socket) =>
   socket.on('pause', () => {
     state.paused = !state.paused;
     io.emit( state.paused ? 'pause' : 'play' );
+  })
+
+  // reloadAll
+  socket.on('reloadAll', () => {
+    io.emit('reload');
   })
 
   // SYNC Server - client init

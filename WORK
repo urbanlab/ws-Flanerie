@@ -1,11 +1,17 @@
-DEBUG iphone
+- Beryl AX
+- Raspi 4 + SD
 
-Iphone Fullscreen ??
+LUNDI
+*** multi group distincts
+** Iphone Fullscreen ?? (manual..)
+** lock orientation ? (yes with PWA..)
+** Clear Device -> clear only display, but keep cookies / id / position 
+** Add future device position
+** homogeneiser la taille du player video source (not video resolution dependant)
 
-lock orientation
-
-
-
+MARDI
+** hypothese: solo video -> video wall
+** play webcam in video container
 
 
 
