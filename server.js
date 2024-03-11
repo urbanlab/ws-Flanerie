@@ -21,13 +21,16 @@ var io = new IoServer(server);
 
 // STATE
 //
-var state = {
-  zoom: config.get('zoom', 1.0),
+var defaultState = {
+  zoom: 1.0,
   offsetTime: 0,
-  media: config.get('media', ''),
+  media: '',
   paused: false,
   ctrls: false
 }
+var state = config.get('state', {});
+if (!state['default']) 
+  state['default'] = Object.assign({}, defaultState );
 
 // PLAYLIST from list of files in /video
 //
@@ -51,33 +54,41 @@ const syncServer = new SyncServer(getTimeFunction);
 
 // Devices
 //
-var devices = config.get('devices', {});
-for (let uuid in devices) {
-  devices[uuid].alive = false;
-}
+var devices = config.get('devices', { 'default': {} });
+for (let room in devices)
+  for (let uuid in devices[room]) 
+    devices[room][uuid].alive = false;
+
 
 // Create a new device entry if it doesn't exist
-function bootstrapDevice(uuid, reso) {
+function bootstrapDevice(uuid, room, reso) {
   if (uuid === undefined) return;
-  devices[uuid] = devices[uuid] || {
+  if (room === undefined) room = 'default';
+
+  if (!devices[room]) devices[room] = {}
+  if (!state[room]) state[room] = Object.assign({}, defaultState );
+
+  devices[room][uuid] = devices[room][uuid] || {
+    room: 'default',
     position: {x: 0, y: 0}, 
     resolution: {x: 100, y: 100},
     alive: false
   };
-  if (reso) devices[uuid].resolution = reso;
-  devices[uuid].alive = true;
+  if (reso) devices[room][uuid].resolution = reso;
+  if (room) devices[room][uuid].room = room;
+  devices[room][uuid].alive = true;
 }
 
 // Save devices to config and emit to clients
-function updateDevices() {
+function updateDevices(room) {
   config.set('devices', devices);
-  io.emit('devices', devices);
+
+  io.to(room).emit('devices', devices);
 }
 
 
 // Socket.io Server
 //
-
 io.on('connection', (socket) => 
 {
   console.log('a user connected');
@@ -87,95 +98,118 @@ io.on('connection', (socket) =>
   });
 
   // Client is ready to receive initial data
-  socket.on('hi', (uuid, reso) => 
+  socket.on('hi', (uuid, room, reso) => 
   {
-    bootstrapDevice(uuid, reso);
-    updateDevices();
-    socket.emit('state', state)
+    if (room === undefined) room = 'default';
+
+    socket.join(room);
+    bootstrapDevice(uuid, room, reso);
+    updateDevices(room);
+    socket.emit('state', state[room])
     socket.emit('playlist', playlist)
   })
   
   // Global zoom
-  socket.on('zoom', (z) => {
-    state.zoom = z;
-    state.zoom = Math.max(0.1, state.zoom);
-    config.set('zoom', state.zoom);
-    io.emit('state', state);
+  socket.on('zoom', (room, z) => {
+    if (room === undefined) room = 'default';
+
+    state[room].zoom = z;
+    state[room].zoom = Math.max(0.1, state[room].zoom);
+    config.set('state', state);
+    io.to(room).emit('state', state[room]);
   })
 
   // Move device
-  socket.on('move', (uuid, delta) => 
+  socket.on('move', (uuid, room, delta) => 
   {
-    bootstrapDevice(uuid);
-    devices[uuid].position.x += delta.x;
-    devices[uuid].position.y += delta.y;
-    updateDevices();
-    // console.log('move', uuid, delta, devices[uuid].position); 
+    if (uuid === undefined) return;
+    if (room === undefined) room = 'default';
+
+    bootstrapDevice(uuid, room);
+
+    devices[room][uuid].position.x += delta.x;
+    devices[room][uuid].position.y += delta.y;
+    updateDevices(room);
+    // console.log('move', uuid, room, delta, devices[room][uuid].position); 
   })
 
   // Move all devices
-  socket.on('moveAll', (delta) => 
+  socket.on('moveAll', (room, delta) => 
   {
-    for (let uuid in devices) {
-      devices[uuid].position.x += delta.x;
-      devices[uuid].position.y += delta.y;
+    if (room === undefined) room = 'default';
+    if (!devices[room]) return;
+
+    for (let uuid in devices[room]) {
+      devices[room][uuid].position.x += delta.x;
+      devices[room][uuid].position.y += delta.y;
     }
-    updateDevices();
+    updateDevices(room);
   })
 
   // Set device position
-  socket.on('setPosition', (uuid, pos) => 
+  socket.on('setPosition', (uuid, room, pos) => 
   {
-    console.log('setPosition', uuid, pos);
+    if (uuid === undefined) return;
+    if (room === undefined) room = 'default';
 
-    bootstrapDevice(uuid);
-    devices[uuid].position = pos;
-    updateDevices();
+    bootstrapDevice(uuid, room);
+    devices[room][uuid].position = pos;
+    updateDevices(room);
   })
 
   // Clear devices
-  socket.on('clearDevices', () => 
+  socket.on('clearDevices', (room) => 
   {
-    for (let uuid in devices) {
-      if (devices[uuid].alive) devices[uuid].alive = false;
-      else delete devices[uuid];
+    if (uuid === undefined) return;
+    if (room === undefined) room = 'default';
+    if (!devices[room]) return;
+
+    for (let uuid in devices[room]) {
+      if (devices[room][uuid].alive) devices[room][uuid].alive = false;
+      else delete devices[room][uuid];
     }
-    updateDevices();
+    updateDevices(room);
   })
 
   // Toggle controls
-  socket.on('toggleCtrls', () => 
+  socket.on('toggleCtrls', (room) => 
   {
-    state.ctrls = !state.ctrls;
-    io.emit('ctrls', state.ctrls);
+    if (room === undefined) room = 'default';
+    
+    state[room].ctrls = !state[room].ctrls;
+    io.to(room).emit('ctrls', state[room].ctrls);
   })
 
   // Load and play media
-  socket.on('play', (media) => {
-    state.offsetTime = getTimeFunction();
-    state.media = media;
-    state.paused = false;
-    config.set('media', state.media);
-    io.emit('state', state);
+  socket.on('play', (room, media) => {
+    if (room === undefined) room = 'default';
+
+    state[room].offsetTime = getTimeFunction();
+    state[room].media = media;
+    state[room].paused = false;
+    config.set('state', state);
+    io.to(room).emit('state', state[room]);
   })
 
   // Stop media
-  socket.on('stop', () => {
-    state.media = '';
-    state.paused = false;
-    config.set('media', state.media);
-    io.emit('stop');
+  socket.on('stop', (room) => {
+    if (room === undefined) room = 'default';
+    state[room].media = '';
+    state[room].paused = false;
+    config.set('state', state);
+    io.to(room).emit('stop');
   })
 
   // Pause
-  socket.on('pause', () => {
-    state.paused = !state.paused;
-    io.emit( state.paused ? 'pause' : 'play' );
+  socket.on('pause', (room) => {
+    if (room === undefined) room = 'default';
+    state[room].paused = !state[room].paused;
+    io.to(room).emit( state[room].paused ? 'pause' : 'play' );
   })
 
   // reloadAll
-  socket.on('reloadAll', () => {
-    io.emit('reload');
+  socket.on('reloadAll', (room) => {
+    io.to(room).emit('reload');
   })
 
   // SYNC Server - client init
@@ -197,15 +231,16 @@ server.listen(3000, function() {
   console.log('listening on *:3000');
 });
 
-app.get('/', function(req, res) {
-  res.sendFile(__dirname + '/www/index.html');
-});
-
-app.get('/control', function(req, res) {
+app.get('/control/:room?', function(req, res) {
   res.sendFile(__dirname + '/www/control.html');
 });
 
-app.use(express.static('www'));
+app.get('/:room?', function(req, res) {
+  res.sendFile(__dirname + '/www/index.html');
+});
 
 
+
+// Serve static files /static
+app.use('/static', express.static('www'));
 

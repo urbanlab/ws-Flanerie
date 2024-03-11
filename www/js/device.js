@@ -4,7 +4,7 @@
 
 class Device {
 
-    constructor(uuid, player) {
+    constructor(uuid, room, player) {
         this.uuid = uuid
         this.position = {x: 0, y: 0}
         this.resolution = {x: 100, y: 100}
@@ -21,7 +21,7 @@ class Device {
 
         this.dom.on('drag', (e, delta) => {
             let d = {x: -1*delta.x/player.stagescale, y: -1*delta.y/player.stagescale}
-            socket.emit('move', uuid, d)
+            socket.emit('move', uuid, room, d)
         })
     }
 
@@ -53,22 +53,26 @@ class Device {
 
 class DevicePool {
 
-    constructor(player) {
+    constructor(room, player) {
         this.devices = {}
         this.player = player
+        this.room = room || 'default'
     }
 
-    update(data) {
-        for (let uuid in data) 
+    update(data) 
+    {
+        if (!data[this.room]) return
+        
+        for (let uuid in data[this.room]) 
             if (uuid != 0)
             {
-                // console.log('update', uuid, data[uuid])
-                if (!this.devices[uuid]) this.devices[uuid] = new Device(uuid, this.player)
-                this.devices[uuid].update(data[uuid])
+                console.log('update', uuid, data[this.room][uuid])
+                if (!this.devices[uuid]) this.devices[uuid] = new Device(uuid, this.room, this.player)
+                this.devices[uuid].update(data[this.room][uuid])
             }
 
         for (let uuid in this.devices)
-            if (!data[uuid]) this.remove(uuid)
+            if (!data[this.room][uuid]) this.remove(uuid)
     }
 
     remove(uuid) {

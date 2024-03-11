@@ -62,7 +62,7 @@ class VideoPlayer {
         if (media == this.media) return
         console.log('load', media)
         this.media = media
-        this.video.attr('src', 'video/'+media)
+        this.video.attr('src', '/static/video/'+media)
         this.video[0].load()
         this.video[0].pause()
     }

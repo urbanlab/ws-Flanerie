@@ -26,6 +26,11 @@ $('#uuid').text(uuid)
 //
 const socket = io()
 
+// Get ROOM from URL
+var room = window.location.pathname.split('/').pop()
+if (!room) room = 'default'
+console.log('room', room)
+
 // PLAYER
 var player = new SyncPlayer( socket, uuid, 'body' )
 
@@ -40,8 +45,8 @@ socket.on('state', (data) => {
 
 socket.on('devices', (data) => {
     // console.log('devices', data)
-    if (!data[uuid] || !data[uuid].alive) updateSize()
-    else player.position(data[uuid].position)
+    if (!data[room] || !data[room][uuid] || !data[room][uuid].alive) updateSize()
+    else player.position(data[room][uuid].position)
 })
 
 socket.on('ctrls', (data) => {
@@ -50,8 +55,8 @@ socket.on('ctrls', (data) => {
     else $('#controls').hide()
 })
 
-socket.on('state', (data) => {
-    console.log('state', data)
+socket.on('state', (data, from) => {
+    console.log('state', data, from)
     if (data.ctrls) $('#controls').show()
     else $('#controls').hide()
 })
@@ -65,26 +70,26 @@ socket.on('reload', () => {
 //
 
 $('#zoomPlus').click(() => {    
-    socket.emit('zoom', player.videoscale + 0.1)
+    socket.emit('zoom', room, player.videoscale + 0.1)
 })
 
 $('#zoomMinus').click(() => {
-    socket.emit('zoom', Math.max(0.1, player.videoscale - 0.1))
+    socket.emit('zoom', room, Math.max(0.1, player.videoscale - 0.1))
 })
 
 $('#reset').click(() => {
-    socket.emit('setPosition', uuid, {x: 0, y: 0})
+    socket.emit('setPosition', uuid, room, {x: 0, y: 0})
 })
 
 
 // DRAG TO OFFSET VIDEO
 //
 player.video.on('drag', (e, delta) => {
-    socket.emit('move', uuid, delta)
+    socket.emit('move', uuid, room, delta)
 })
 
 player.backstage.on('drag', (e, delta) => {
-    socket.emit('move', uuid, delta)
+    socket.emit('move', uuid, room, delta)
 })
 
 // ORIENTATION / RESOLUTION CHANGE
@@ -93,7 +98,7 @@ player.backstage.on('drag', (e, delta) => {
 function updateSize() {
     $('#resolution').text(window.innerWidth+"x"+window.innerHeight)
     $('#ratio').text("ratio: "+window.devicePixelRatio)
-    socket.emit('hi', uuid, {x: window.innerWidth, y: window.innerHeight})
+    socket.emit('hi', uuid, room, {x: window.innerWidth, y: window.innerHeight})
 }
 $(window).on('orientationchange resize ready', updateSize)
 
@@ -103,7 +108,7 @@ $(window).on('orientationchange resize ready', updateSize)
 // window.addEventListener("wheel", event => {
 //     const sign = Math.sign(event.deltaY);
 //     let s = Math.max(0.1, player.videoscale - sign * 0.1);
-//     socket.emit('zoom', s)
+//     socket.emit('zoom', room, s)
 //     // console.log(stagescale)
 // });
 

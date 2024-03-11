@@ -22,10 +22,15 @@ const uuid = 0;
 //
 const socket = io()
 
+// Get ROOM from URL
+var room = window.location.pathname.split('/').pop()
+if (!room || room == 'control') room = 'default'
+console.log('room', room)
+
 // Players
 //
 var player = new SyncPlayer( socket, uuid, 'body' )
-var devices = new DevicePool( player )
+var devices = new DevicePool( room, player )
 
 var touchStart = null
 
@@ -34,11 +39,9 @@ player.scaleStage(0.5)
 player.moveStage({x: 220, y: 100})
 
 
-
-
 socket.on('hello', () => {
     console.log('================ hello ================')
-    socket.emit('hi', uuid, {x: window.innerWidth, y: window.innerHeight})
+    socket.emit('hi', uuid, room, {x: window.innerWidth, y: window.innerHeight})
 });
 
 socket.on('zoom', (data) => {
@@ -53,50 +56,42 @@ socket.on('playlist', (data) => {
     // Create button for each video
     $('#playlist').empty()
     data.forEach((v) => {
-        $('#playlist').append(`<button class="btn" onclick="socket.emit('play', '${v}')">${v}</button><br />`)
+        $('#playlist').append(`<button class="btn" onclick="socket.emit('play', '${room}', '${v}')">${v}</button><br />`)
     })
 })
 
 $('#zoomPlus').click(() => {    
-    socket.emit('zoom', player.videoscale + 0.1)
+    socket.emit('zoom', room, player.videoscale + 0.1)
 })
 
 $('#zoomMinus').click(() => {
-    socket.emit('zoom', Math.max(0.1, player.videoscale - 0.1))
+    socket.emit('zoom', room, Math.max(0.1, player.videoscale - 0.1))
 })
 
 $("#ctrls").click((e) => {
-    socket.emit('toggleCtrls')
+    socket.emit('toggleCtrls', room)
 })
 
 $('#clear').click(() => {
-    socket.emit('clearDevices')
+    socket.emit('clearDevices', room)
 })
 
 $('#alive').click(() => {
     $('.device').not('.alive').toggle()
 })
 
-$('#0small').click(() => {
-    socket.emit('play', '0_small.mp4')
-})
-
-$('#bbb').click(() => {
-    socket.emit('play', 'bbb.mp4')
-})
-
 $('#pause').click(() => {
-    socket.emit('pause')
+    socket.emit('pause', room)
 })
 
 $('#stop').click(() => {
-    socket.emit('stop')
+    socket.emit('stop', room)
 })
 
 // DRAG VIDEO -> MOVE ALL DEVICES
 player.video.on('drag', (e, delta) => {
     // socket.emit('move', uuid, delta)
-    socket.emit('moveAll', delta)
+    socket.emit('moveAll', room, delta)
 
     delta = {x: delta.x*player.stagescale, y: delta.y*player.stagescale}
     player.moveStage(delta)
@@ -121,6 +116,6 @@ window.addEventListener("wheel", event => {
 
 // RELOAD
 $('#reloadAll').click(() => {
-    socket.emit('reloadAll')
+    socket.emit('reloadAll', room)
 })
 
