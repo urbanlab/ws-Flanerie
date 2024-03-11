@@ -88,6 +88,10 @@ $('#stop').click(() => {
     socket.emit('stop', room)
 })
 
+$('#camera').click(() => {
+    socket.emit('play', room, '#camera')
+})
+
 // DRAG VIDEO -> MOVE ALL DEVICES
 player.video.on('drag', (e, delta) => {
     // socket.emit('move', uuid, delta)

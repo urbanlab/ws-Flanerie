@@ -119,6 +119,13 @@ body {
     left: 0;
     /* border: 1px solid green; */
     transform-origin: top left;
+    width: 1920px;  /* forced base size */
+    height: 1080px; 
+    object-fit: cover;
+}
+
+.player.mirrored {
+    transform: scaleX(-1);
 }
 
 #zoomMinus, #zoomPlus {

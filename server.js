@@ -76,7 +76,7 @@ function bootstrapDevice(uuid, room, reso) {
   };
   if (reso) devices[room][uuid].resolution = reso;
   if (room) devices[room][uuid].room = room;
-  devices[room][uuid].alive = true;
+  if (reso) devices[room][uuid].alive = true;
 }
 
 // Save devices to config and emit to clients
@@ -95,6 +95,10 @@ io.on('connection', (socket) =>
 
   socket.on('disconnect', () => {
     console.log('user disconnected');
+    if (socket.uuid && devices[socket.room]) {
+      devices[socket.room][socket.uuid].alive = false;
+      updateDevices(socket.room);
+    }
   });
 
   // Client is ready to receive initial data
@@ -102,6 +106,8 @@ io.on('connection', (socket) =>
   {
     if (room === undefined) room = 'default';
 
+    socket.uuid = uuid;
+    socket.room = room;
     socket.join(room);
     bootstrapDevice(uuid, room, reso);
     updateDevices(room);
@@ -160,7 +166,6 @@ io.on('connection', (socket) =>
   // Clear devices
   socket.on('clearDevices', (room) => 
   {
-    if (uuid === undefined) return;
     if (room === undefined) room = 'default';
     if (!devices[room]) return;
 

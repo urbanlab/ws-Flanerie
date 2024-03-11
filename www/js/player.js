@@ -62,9 +62,28 @@ class VideoPlayer {
         if (media == this.media) return
         console.log('load', media)
         this.media = media
-        this.video.attr('src', '/static/video/'+media)
-        this.video[0].load()
-        this.video[0].pause()
+
+        if (this.media == '#camera') 
+        {
+            navigator.mediaDevices.getUserMedia({video: true})
+                .then((stream) => {
+                    this.video[0].srcObject = stream;
+                    this.video[0].play()
+                })
+                .catch((error) => {
+                    console.error(error.name + ': ' + error.message);
+                });
+        } 
+        else 
+        {   
+            if (this.video[0].srcObject) {
+                this.video[0].srcObject.getTracks().forEach(track => track.stop());
+                this.video[0].srcObject = null
+            }
+            this.video.attr('src', '/static/video/'+media)
+            this.video[0].load()
+            this.video[0].pause()
+        }
     }
 
     play(media) {
