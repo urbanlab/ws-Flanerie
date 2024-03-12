@@ -71,8 +71,10 @@ function bootstrapDevice(uuid, room, reso) {
   devices[room][uuid] = devices[room][uuid] || {
     room: 'default',
     position: {x: 0, y: 0}, 
-    resolution: {x: 100, y: 100},
-    alive: false
+    resolution: {x: 400, y: 800},
+    alive: false,
+    selected: false,
+    guest: false
   };
   if (reso) devices[room][uuid].resolution = reso;
   if (room) devices[room][uuid].room = room;

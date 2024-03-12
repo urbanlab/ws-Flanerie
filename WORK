@@ -1,6 +1,11 @@
 - Beryl AX
 - Raspi 4 + SD
 
+- error fullscreen ? keep FS or not ?
+- Cookie NoFullscreen
+- zoom per device
+- per media position
+
 ** Iphone Fullscreen ?? (manual..)
 ** lock orientation ? (yes with PWA..)
 ** Clear Device -> clear only display, but keep cookies / id / position 

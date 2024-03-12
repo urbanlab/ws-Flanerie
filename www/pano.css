@@ -61,7 +61,7 @@ body {
     border: 1px solid green;
     background-color: #CCC;
     color: black;
-    display: none;
+    display: none; 
 }
 
 #controls {
@@ -119,9 +119,10 @@ body {
     left: 0;
     /* border: 1px solid green; */
     transform-origin: top left;
-    width: 1920px;  /* forced base size */
+    /* forced base size */
+    /* width: 1920px;   */
     height: 1080px; 
-    object-fit: cover;
+    /* object-fit: fill; */
 }
 
 .player.mirrored {
@@ -147,15 +148,20 @@ body {
     width: 100px;
     height: 100px;
     border: 1px solid #ccc;
-    background-color: rgba(30, 30, 30, 0.5);
+    background-color: rgba(100, 30, 30, 0.5);
 }
 
-.device.selected {
-    border: 1px solid #fff;
-    background-color: rgba(100, 30, 30, 0.5);
+.device.guest {
+    border: 1px solid #ff0;
+    background-color: rgba(100, 100, 30, 0.5);
 }
 
 .device.alive {
     border: 1px solid #0f0;
     background-color: rgba(30, 100, 30, 0.5);
+}
+
+.device.selected, .device.alive.selected, .device.guest.selected {
+    border: 1px solid #fff;
+    background-color: rgba(30, 30, 30, 0.5);
 }
