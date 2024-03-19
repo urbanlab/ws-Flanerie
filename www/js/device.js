@@ -4,10 +4,14 @@
 
 class Device {
 
-    constructor(uuid, room, player) {
+    constructor(uuid, room, player) 
+    {
+        uuid = String(uuid)
         this.uuid = uuid
+        this.room = room
         this.position = {x: 0, y: 0}
         this.resolution = {x: 100, y: 100}
+        this.zoomdevice = 1.0
         this.selected = false
         this.alive = false
         this.dom =  $('<div class="device" id="'+uuid+'"></div>')
@@ -18,25 +22,71 @@ class Device {
 
         this.dom.on('dragstart', () => { this.select(true) })
         this.dom.on('dragend', () => { this.select(false) })
+        this.dom.on('dblclick', () => { this.select(true) })
 
         this.dom.on('drag', (e, delta) => {
             let d = {x: -1*delta.x/player.stagescale, y: -1*delta.y/player.stagescale}
             socket.emit('move', uuid, room, d)
         })
+
+        // device controls
+        var controls = $('<div class="devCtrls"></div>').appendTo(this.dom)
+
+        // uuid
+        $('<input type="text" value="'+uuid+'"></input>').appendTo(controls).on('change', (e) => {
+            let newuuid = $(e.target).val()
+            socket.emit('rename', this.room, this.uuid, newuuid)
+        })
+        
+        // mode select
+        var mode = $('<select></select>').appendTo(controls)
+        mode.append('<option value="new">new</option>')
+        mode.append('<option value="fixed">fixed</option>')
+        mode.append('<option value="guest">guest</option>')
+        mode.on('change', (e) => {
+            let newmode = $(e.target).val()
+            socket.emit('mode', this.room, this.uuid, newmode)
+        })
+
+        // remove
+        $('<button>remove</button>').appendTo(controls).on('click', () => {
+            socket.emit('remove', room, this.uuid)
+        })
+
+        // zoomdevice
+        $('<div class="zdev">zoom <span></span></div>').appendTo(controls)
+        $('<button>+</button>').appendTo(controls).on('click', () => {
+            socket.emit('zoomdevice', room, this.uuid, this.zoomdevice + 0.01)
+        })
+        $('<button>-</button>').appendTo(controls).on('click', () => {
+            socket.emit('zoomdevice', room, this.uuid, Math.max(0.1, this.zoomdevice - 0.01))
+        })
+
     }
 
     update(data) {
         this.position = data.position
         this.resolution = data.resolution
+        this.zoomdevice = data.zoomdevice
         this.alive = data.alive
+
+        this.dom.removeClass(this.mode)
+        this.mode = data.mode
+        this.dom.addClass(this.mode)
+
+        // update select with mode
+        this.dom.find('select').val(this.mode)
+
+        // zoom value
+        this.dom.find('.zdev span').text(Math.round(this.zoomdevice*100) + '%')
 
         if (this.alive) this.dom.addClass('alive')
         else this.dom.removeClass('alive')
 
-        this.dom.css('left', -1*data.position.x)
-        this.dom.css('top', -1*data.position.y)
-        this.dom.css('width', data.resolution.x)
-        this.dom.css('height', data.resolution.y)
+        this.dom.css('left', -1*data.position.x/data.zoomdevice)
+        this.dom.css('top', -1*data.position.y/data.zoomdevice)
+        this.dom.css('width', data.resolution.x/data.zoomdevice)
+        this.dom.css('height', data.resolution.y/data.zoomdevice)
     }
     
     remove() {
@@ -48,6 +98,7 @@ class Device {
         this.selected = s
         if (this.selected) this.dom.addClass('selected')
         else this.dom.removeClass('selected')
+        socket.emit('select', this.room, this.uuid, this.selected)
     }
 }        
 
@@ -62,11 +113,12 @@ class DevicePool {
     update(data) 
     {
         if (!data[this.room]) return
-        
+        console.log('update', data[this.room])   
+
         for (let uuid in data[this.room]) 
             if (uuid != 0)
             {
-                console.log('update', uuid, data[this.room][uuid])
+                // console.log('update', uuid, data[this.room][uuid])
                 if (!this.devices[uuid]) this.devices[uuid] = new Device(uuid, this.room, this.player)
                 this.devices[uuid].update(data[this.room][uuid])
             }

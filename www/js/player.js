@@ -15,12 +15,16 @@ class VideoPlayer {
         this.stageoffset = {x: 0, y: 0}
         this.scaleStage(1.0)
         
-        this.video = $('<video class="player draggable" muted loop playsinline></video>').appendTo(this.stage);
+        this.video = $('<video class="player draggable" loop playsinline></video>').appendTo(this.stage);
         this.video.attr('uuid', uuid)
+        this._globalzoom = 1.0
+        this._localzoom = 1.0
         this.videoscale = 1.0
         this.videooffset = {x: 0, y: 0}
         this.position({x: 0, y: 0})
-        this.zoom(1.0)
+        this.globalzoom(1.0)
+
+        this.devicemode = 'new'
     }
 
     // stage scale 0->1
@@ -39,11 +43,21 @@ class VideoPlayer {
         this.stage.css('transform', 'scale('+this.stagescale+') translate('+this.stageoffset.x/this.stagescale+'px, '+this.stageoffset.y/this.stagescale+'px)')
     }
 
-    // video zoom
-    zoom(z) {
+    // global video zoom
+    globalzoom(z) {
          // console.log('zoom', z)
-        $('#zoom').text( Math.round(z*100) +"%")
-        this.videoscale = Math.max(0.1, z)
+         this._globalzoom = Math.max(0.1, z)
+         this.videoscale = this._globalzoom * this._localzoom
+         $('#zoom').text( Math.round(this._globalzoom*100) +"%")
+        this.video.css('transform', 'scale('+this.videoscale+') translate('+this.videooffset.x/this.videoscale+'px, '+this.videooffset.y/this.videoscale+'px)')
+    }
+
+    // local device zoom
+    localzoom(z) {
+        // console.log('zoom', z)
+        this._localzoom = Math.max(0.1, z)
+        this.videoscale = this._globalzoom * this._localzoom
+        $('#zoomdevice').text( Math.round(this._localzoom*100) +"%")
         this.video.css('transform', 'scale('+this.videoscale+') translate('+this.videooffset.x/this.videoscale+'px, '+this.videooffset.y/this.videoscale+'px)')
     }
 
@@ -56,6 +70,20 @@ class VideoPlayer {
         $('#y').text(pos.y+" px")
         this.videooffset = pos
         this.video.css('transform', 'scale('+this.videoscale+') translate('+this.videooffset.x/this.videoscale+'px, '+this.videooffset.y/this.videoscale+'px)')
+    }
+
+    // mode
+    mode(m) {
+        this.devicemode = m
+        $('#mode').text(m)
+    }
+
+    // update
+    updateConf(data) {
+        console.log('UPDATE', data)
+        this.position(data.position)
+        this.mode(data.mode) 
+        this.localzoom(data.zoomdevice)
     }
 
     load(media) {
@@ -89,7 +117,7 @@ class VideoPlayer {
     play(media) {
         if (media) this.load(media)
         console.log('play!')
-        $('#logs').text('play! '+ media)
+        // $('#logs').text('play! '+ media)
         this.video[0].play()
         this.video[0].style.visibility = 'visible'
     }

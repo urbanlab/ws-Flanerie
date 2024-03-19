@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="viewport" content="minimal-ui, width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0" />
 
     <title>Flanerie Panoptic</title>
     <link rel="stylesheet" href="/static/pano.css" />
@@ -41,6 +41,8 @@
     <div id="welcome">
       <button id="go">GO !</button>
     </div>
+
+    <div id="selected"></div>
     
     <div id="logs"></div>
     
@@ -53,10 +55,12 @@
       
       <br />
       
-      <!-- Z: <span id="zoom">100%</span><br />
-        <i data-feather="minus-circle" id="zoomMinus"></i>
-        <i data-feather="plus-circle" id="zoomPlus"></i> -->
+      Z global: <span id="zoom">100%</span><br />
+      Z device: <span id="zoomdevice">100%</span><br />
+        <i data-feather="minus-circle" id="zoomMinusLocal"></i>
+        <i data-feather="plus-circle" id="zoomPlusLocal"></i>
         
+        <br />
         <br />
 
       X: <span id="x">0</span><br />
@@ -70,7 +74,8 @@
       WakeLock: <span id="wakeLock">X</span><br />
       
       <br />
-      <span id="uuid"></span>
+      <span id="uuid"></span><br />
+      <span id="mode"></span><br />
 
     </div>
 

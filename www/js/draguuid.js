@@ -58,6 +58,19 @@ $(function() {
         $('.dragging').removeClass('dragging')
         console.log('touchend')
     })
+
+    // arrow key to move
+    $('body').on('keydown', (e)=>{
+        console.log('keydown', e.key)
+        var delta = {x: 0, y: 0}
+        if (e.key == 'ArrowUp') delta.y = -1
+        if (e.key == 'ArrowDown') delta.y = 1
+        if (e.key == 'ArrowLeft') delta.x = -1
+        if (e.key == 'ArrowRight') delta.x = 1
+        $('.selected').each((i, e) => {
+            $(e).triggerHandler('drag', delta)
+        })
+    })
 })
 
 

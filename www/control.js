@@ -45,7 +45,7 @@ socket.on('hello', () => {
 });
 
 socket.on('zoom', (data) => {
-   player.zoom(data)
+   player.globalzoom(data)
 })
 
 socket.on('devices', (data) => {
@@ -92,6 +92,14 @@ $('#camera').click(() => {
     socket.emit('play', room, '#camera')
 })
 
+$('#mediaBtn').click(() => {
+    $('#playlist').toggle()
+})
+
+$('#guest').click(() => {
+    socket.emit('guestAdd', room)
+})
+
 // DRAG VIDEO -> MOVE ALL DEVICES
 player.video.on('drag', (e, delta) => {
     // socket.emit('move', uuid, delta)
@@ -113,6 +121,10 @@ window.addEventListener("wheel", event => {
     player.scaleStage(s)
     // console.log(stagescale)
 });
+
+document.getElementById('controls').addEventListener('wheel', (e) => {
+    e.stopPropagation()
+})
 
 
 // CONTROLS / INFO

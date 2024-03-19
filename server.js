@@ -56,9 +56,14 @@ const syncServer = new SyncServer(getTimeFunction);
 //
 var devices = config.get('devices', { 'default': {} });
 for (let room in devices)
-  for (let uuid in devices[room]) 
+  for (let uuid in devices[room]) {
     devices[room][uuid].alive = false;
+    if (devices[room][uuid].mode.startsWith('guest')) 
+      devices[room][uuid].resolution = {x: 400, y: 800};
+    if (!devices[room][uuid].zoomdevice) devices[room][uuid].zoomdevice = 1.0;
+  }
 
+console.log('devices', devices);
 
 // Create a new device entry if it doesn't exist
 function bootstrapDevice(uuid, room, reso) {
@@ -72,9 +77,10 @@ function bootstrapDevice(uuid, room, reso) {
     room: 'default',
     position: {x: 0, y: 0}, 
     resolution: {x: 400, y: 800},
+    zoomdevice: 1.0,
     alive: false,
     selected: false,
-    guest: false
+    mode: 'new' // new, fixed, guest
   };
   if (reso) devices[room][uuid].resolution = reso;
   if (room) devices[room][uuid].room = room;
@@ -84,7 +90,6 @@ function bootstrapDevice(uuid, room, reso) {
 // Save devices to config and emit to clients
 function updateDevices(room) {
   config.set('devices', devices);
-
   io.to(room).emit('devices', devices);
 }
 
@@ -99,6 +104,7 @@ io.on('connection', (socket) =>
     console.log('user disconnected');
     if (socket.uuid && devices[socket.room]) {
       devices[socket.room][socket.uuid].alive = false;
+      if (socket.uuid.startsWith('guest')) devices[socket.room][socket.uuid].resolution = {x: 400, y: 800};
       updateDevices(socket.room);
     }
   });
@@ -115,6 +121,18 @@ io.on('connection', (socket) =>
     updateDevices(room);
     socket.emit('state', state[room])
     socket.emit('playlist', playlist)
+    console.log('hi', uuid, room, reso);
+
+    // if new, try to move to a dead guest
+    if (devices[room][uuid].mode === 'new') {
+      for (let guestid in devices[room]) {
+        if (devices[room][guestid].mode === 'guest' && !devices[room][guestid].alive) {
+          io.to(room).emit('rename', uuid, guestid);
+          break;
+        }
+      }
+    }
+
   })
   
   // Global zoom
@@ -127,6 +145,69 @@ io.on('connection', (socket) =>
     io.to(room).emit('state', state[room]);
   })
 
+  // Local zoom
+  socket.on('zoomdevice', (room, uuid, z) => {
+    if (room === undefined) room = 'default';
+    if (uuid === undefined) return;
+
+    bootstrapDevice(uuid, room);
+    devices[room][uuid].zoomdevice = z;
+    updateDevices(room);
+  })
+
+  // Rename device
+  socket.on('rename', (room, uuid, newuuid) => {
+    if (room === undefined) room = 'default';
+    if (uuid === undefined) return;
+    if (newuuid === undefined) return;
+    
+    devices[room][newuuid] = devices[room][uuid];
+    io.to(room).emit('rename', uuid, newuuid);
+  })
+
+  // Remove device
+  socket.on('remove', (room, uuid) => {
+    if (room === undefined) room = 'default';
+    if (uuid === undefined) return;
+    if (devices[room][uuid]) {
+      if (uuid.startsWith('guest')) io.to(room).emit('reload', uuid);
+      delete devices[room][uuid];
+      updateDevices(room);
+    }
+  })
+
+  // Mode
+  socket.on('mode', (room, uuid, mode) => {
+    if (room === undefined) room = 'default';
+    if (uuid === undefined) return;
+    if (mode === undefined) return;
+
+    bootstrapDevice(uuid, room);
+    devices[room][uuid].mode = mode;
+    config.set('state', state);
+    updateDevices(room);
+  })
+
+  // select device
+  socket.on('select', (room, uuid, selected) => {
+    io.to(room).emit('select', uuid, selected);
+  })
+
+  // Add guest
+  socket.on('guestAdd', (room) => {
+    if (room === undefined) room = 'default';
+    
+    var guestCount = 0;
+    for (let uuid in devices[room])
+      if (devices[room][uuid].mode === 'guest') guestCount++;
+    while (devices[room]['guest'+guestCount]) guestCount++;
+    var uuid = "guest"+guestCount
+    bootstrapDevice(uuid, room, {x: 400, y: 800});
+    devices[room][uuid].alive = false;
+    devices[room][uuid].mode = 'guest';
+    updateDevices(room);
+  })
+
   // Move device
   socket.on('move', (uuid, room, delta) => 
   {
@@ -134,7 +215,6 @@ io.on('connection', (socket) =>
     if (room === undefined) room = 'default';
 
     bootstrapDevice(uuid, room);
-
     devices[room][uuid].position.x += delta.x;
     devices[room][uuid].position.y += delta.y;
     updateDevices(room);
@@ -173,7 +253,7 @@ io.on('connection', (socket) =>
 
     for (let uuid in devices[room]) {
       if (devices[room][uuid].alive) devices[room][uuid].alive = false;
-      else delete devices[room][uuid];
+      else if (!uuid.startsWith('guest')) delete devices[room][uuid];
     }
     updateDevices(room);
   })
@@ -216,7 +296,7 @@ io.on('connection', (socket) =>
 
   // reloadAll
   socket.on('reloadAll', (room) => {
-    io.to(room).emit('reload');
+    io.to(room).emit('reload', 'all');
   })
 
   // SYNC Server - client init

@@ -21,8 +21,9 @@ const urlParams = new URLSearchParams(window.location.search);
 
 // UUID
 //
-const uuid = urlParams.get('uuid') || Cookies.get('uuid') || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
-Cookies.set('uuid', uuid)
+var uuid = urlParams.get('uuid') || Cookies.get('uuid') || Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+if (!uuid || uuid == 0) uuid = Math.random().toString(36).substring(2, 15)
+Cookies.set('uuid', uuid, { expires: 3700 })
 $('#uuid').text(uuid)
 // $('#uuid').text(urlParams)
 
@@ -43,14 +44,10 @@ socket.on('hello', () => {
     updateSize()
 });
 
-socket.on('state', (data) => {
-    player.zoom(data.zoom)
-})
-
 socket.on('devices', (data) => {
-    // console.log('devices', data)
+    console.log('devices', data)
     if (!data[room] || !data[room][uuid] || !data[room][uuid].alive) updateSize()
-    else player.position(data[room][uuid].position)
+    else player.updateConf(data[room][uuid])
 })
 
 socket.on('ctrls', (data) => {
@@ -65,20 +62,38 @@ socket.on('state', (data, from) => {
     else $('#controls').hide()
 })
 
-socket.on('reload', () => {
-    location.reload()
+socket.on('select', (uuid, selected) => {
+    if (uuid == player.uuid) {
+        if (selected) $('#selected').show()
+        else $('#selected').hide()
+    }
+})
+
+socket.on('reload', (uuid) => {
+    if (uuid == player.uuid || uuid == 'all') location.reload()
+})
+
+socket.on('rename', (olduuid, newuuid) => {
+    if (olduuid == uuid) {
+        player.uuid = newuuid
+        uuid = newuuid
+        if (!newuuid.startsWith('guest')) Cookies.set('uuid', uuid, { expires: 3700 })
+        $('#uuid').text(uuid)
+        updateSize()
+        socket.emit('remove', room, olduuid)
+    }
 })
 
 
 // CONTROLS
 //
 
-$('#zoomPlus').click(() => {    
-    socket.emit('zoom', room, player.videoscale + 0.1)
+$('#zoomPlusLocal').click(() => {    
+    socket.emit('zoomdevice', room, uuid, player._localzoom + 0.01)
 })
 
-$('#zoomMinus').click(() => {
-    socket.emit('zoom', room, Math.max(0.1, player.videoscale - 0.1))
+$('#zoomMinusLocal').click(() => {
+    socket.emit('zoomdevice', room, uuid, Math.max(0.1, player._localzoom - 0.01))
 })
 
 $('#reset').click(() => {
@@ -100,8 +115,11 @@ player.backstage.on('drag', (e, delta) => {
 //
 
 function updateSize() {
+    if (window.innerWidth == 0 && window.innerHeight == 0) return
     $('#resolution').text(window.innerWidth+"x"+window.innerHeight)
     $('#ratio').text("ratio: "+window.devicePixelRatio)
+    $('#logs').append("updateSize "+uuid+" "+room+" "+window.innerWidth+"x"+window.innerHeight+"<br>")
+    console.log('updateSize', uuid, room, {x: window.innerWidth, y: window.innerHeight})
     socket.emit('hi', uuid, room, {x: window.innerWidth, y: window.innerHeight})
 }
 $(window).on('orientationchange resize ready', updateSize)
@@ -120,6 +138,9 @@ $(window).on('orientationchange resize ready', updateSize)
 //
 $(window).on('dblclick', () => {
     $('#controls').toggle()
+})
+$('#controls').on('dblclick', (e) => {
+    e.stopPropagation()
 })
 
 
@@ -161,3 +182,10 @@ $('#go').click(() => {
 setTimeout(() => {
     if (urlParams.has('go')) $('#go').click()
 }, 1000)
+
+// MISC
+//
+$(document).on('contextmenu', function (e) {
+    e.preventDefault()
+    return false;
+});
