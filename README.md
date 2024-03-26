@@ -1,4 +1,6 @@
 # Flanerie
+![Plusieurs smartphones et tablettes sonr accolés les uns au autres, sur chaque écran des vidéo d'oeils son diffusés](media/IMG_7490.jpeg)
+
 
 ## Quickstart
 
